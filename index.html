@@ -1,0 +1,116 @@
+<html>
+<head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ramda/0.25.0/ramda.js"></script>
+  <script src="./words.js"></script>
+  <style>
+    table.names {
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    table.names td {
+      text-align: center;
+      vertical-align: middle;
+      font-family: sans-serif;
+    }
+  </style>
+</head>
+
+<body bgcolor="black">
+  <a href="https://github.com/kristiandupont/conkyte">
+    <img style="position: absolute; top: 0; left: 0; border: 0;" src="https://camo.githubusercontent.com/567c3a48d796e2fc06ea80409cc9dd82bf714434/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f6c6566745f6461726b626c75655f3132313632312e706e67"
+      alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_left_darkblue_121621.png">
+  </a>
+
+  <table class="names" cellpadding="0" cellspacing="0">
+    <tr> <td style="color: #333; font-size: 14px;" id='name-9'>&nbsp;</td> </tr>
+    <tr> <td style="color: #333; font-size: 14px;" id='name-8'>&nbsp;</td> </tr>
+    <tr> <td style="color: #333; font-size: 14px;" id='name-7'>&nbsp;</td> </tr>
+    <tr> <td style="color: #333; font-size: 14px;" id='name-6'>&nbsp;</td> </tr>
+    <tr> <td style="color: #333; font-size: 15px;" id='name-5'>&nbsp;</td> </tr>
+    <tr> <td style="color: #333; font-size: 16px;" id='name-4'>&nbsp;</td> </tr>
+    <tr> <td style="color: #444; font-size: 17px;" id='name-3'>&nbsp;</td> </tr>
+    <tr> <td style="color: #444; font-size: 18px;" id='name-2'>&nbsp;</td> </tr>
+    <tr> <td style="color: #555; font-size: 19px;" id='name-1'>&nbsp;</td> </tr>
+    <tr> <td style="color: silver; font-size: 50px;" id='name-0'>&nbsp;</td> </tr>
+  </table>
+
+  <script>
+    function capitalize(s) { return s[0].toUpperCase() + s.substr(1).toLowerCase(); }
+    function randomIndex(list) { return Math.floor(Math.random() * list.length); }
+    function selectRandom(list) { return list[randomIndex(list)]; }
+
+    const consonants = ['b', 'c', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'z'];
+    const vowels = ['a', 'e', 'i', 'o', 'u', 'y'];
+
+    const onsetClusters = consonants.concat([
+      'bl', 'br', 'dr', 'dw', 'fl', 'fr', 'gl', 'gr', 'kl', 'kr', 'kw',
+      'pl', 'pr', 'sk', 'skr', 'skw', 'sl', 'sm', 'sn', 'sp', 'spl', 'spr',
+      'str', 'sw', 'shr', 'tr', 'tw', 'thr', 'thw'
+    ]);
+
+    const nucleusClusters = vowels.concat([
+      'ue', 'ie', 'ou', 'oy'
+    ]);
+
+    const codaClusters = consonants.concat([
+      'dz', 'ft', 'ks', 'lb', 'lch', 'ld', 'lf', 'lk', 'lp', 'lt', 'nch',
+      'nd', 'nt', 'nz', 'ps', 'pt', 'sk', 'sp', 'st'
+    ]);
+
+    const syllableMap = { '!': onsetClusters, '#': nucleusClusters, '_': codaClusters };
+
+    function createTemplateGenerator(template) {
+      return () => capitalize(R.map(c => selectRandom(syllableMap[c]), template).join(''));
+    }
+
+    const nameGenerators = [
+      '!#_',
+      '!#_!#',
+      '!#_!#_!#_',
+      '!#!#_',
+      '!#!#'
+    ].map(createTemplateGenerator);
+
+    // This generator takes an existing word and replaces a random letter in it.
+    nameGenerators.push(function replaceLetter() {
+      const originalWord = selectRandom(words);
+      const letterIndex = randomIndex(originalWord);
+      const letter = originalWord[letterIndex];
+      const letterList = R.find(R.contains(letter), [vowels, consonants]);
+      const otherLetters = letterList.filter(l => l !== letter);
+      const replacement = selectRandom(otherLetters);
+      const newWord = originalWord.substr(0, letterIndex) + replacement + originalWord.substr(letterIndex + 1);
+      console.log(originalWord, '->', newWord);
+      return capitalize(newWord);
+    });
+
+    // This one takes two random words and puts them together.
+    nameGenerators.push(function concatenateTwoWords() {
+      const firstWord = capitalize(selectRandom(words));
+      const secondWord = capitalize(selectRandom(words));
+      console.log(firstWord, ',', secondWord);
+      return firstWord + secondWord;
+    });
+
+    // This is the list of names to display
+    const generatedNames = new Array(10);
+
+    function generate() {
+      generatedNames.splice(0, 1);
+      const generator = selectRandom(nameGenerators);
+      const newName = generator();
+      generatedNames.push(newName);
+
+      for (var i = 0; i < 10; i++) {
+        document.querySelector(`#name-${(9 - i)}`).innerHTML = generatedNames[i] || '&nbsp;';
+      }
+      setTimeout(generate, 1500);
+    }
+
+    generate();
+
+  </script>
+</body>
+</html>
